@@ -26,9 +26,50 @@ def test_load_csv_data():
 
 def test_load_fastq_file():
     """Test loading FASTQ format files"""
-    # 此测试验证 FASTQ 文件解析
-    pass  # 将在后续实现
+    # 创建临时 FASTQ 文件
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.fastq', delete=False) as f:
+        f.write("@read1\n")
+        f.write("ATCGATCG\n")
+        f.write("+\n")
+        f.write("IIIIIIII\n")
+        f.write("@read2\n")
+        f.write("GCTAGCTA\n")
+        f.write("+\n")
+        f.write("IIIIIIII\n")
+        temp_path = f.name
+    
+    try:
+        from src.data.data_loader import DataLoader
+        loader = DataLoader()
+        result = loader._load_fastq(temp_path)
+        
+        assert isinstance(result, dict)
+        assert result['format'] == 'fastq'
+        assert result['records'] == 2
+        assert result['file'] == temp_path
+    finally:
+        os.unlink(temp_path)
 
 def test_auto_detect_format():
     """Test automatic format detection"""
-    pass  # 将在后续实现
+    from src.data.data_loader import DataLoader
+    loader = DataLoader()
+    
+    # 测试各种扩展名
+    test_cases = [
+        ('data.csv', 'csv'),
+        ('data.tsv', 'tsv'),
+        ('data.fastq', 'fastq'),
+        ('data.fq', 'fastq'),
+        ('data.vcf', 'vcf'),
+        ('data.fasta', 'fasta'),
+        ('data.fa', 'fasta'),
+        ('data.txt', 'unknown'),
+        ('data.xyz', 'unknown'),
+    ]
+    
+    for filename, expected_format in test_cases:
+        # 创建临时文件路径（不需要实际文件，只测试扩展名检测）
+        temp_path = Path(tempfile.gettempdir()) / filename
+        detected = loader.auto_detect_format(temp_path)
+        assert detected == expected_format, f"Failed for {filename}: expected {expected_format}, got {detected}"
