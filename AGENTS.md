@@ -58,12 +58,17 @@ streamlit run src/ui/app.py
 │   ├── analysis/           # R 分析执行器
 │   └── data/               # 数据加载与缓存
 ├── r_scripts/              # R 分析脚本
+├── pubmed-etl/             # 独立文献处理工具（两个项目之一）
+├── scripts/                # 安装与构建脚本
 ├── tests/                  # 测试
 │   ├── unit/
-│   └── integration/
+│   ├── integration/
+│   └── performance/
 ├── docs/                   # 文档
+│   ├── api/                # 项目间接口规范
+│   ├── user/               # 用户指南
 │   └── superpowers/        # 设计文档与计划
-└── config/                 # 配置文件
+└── .env.example            # 环境变量示例
 ```
 
 ## 代码规范
