@@ -37,17 +37,58 @@ class DataLoader:
         return pd.read_csv(file_path, sep='\t')
     
     def _load_fastq(self, file_path: Union[str, Path]) -> Dict[str, Any]:
-        """加载 FASTQ 文件（简化版）"""
-        # 实际实现需要解析 FASTQ 格式
-        return {"format": "fastq", "file": str(file_path)}
+        """加载 FASTQ 文件，返回记录数等信息"""
+        try:
+            record_count = 0
+            with open(file_path, 'r') as f:
+                for line in f:
+                    if line.startswith('@'):
+                        record_count += 1
+            logger.info(f"Loaded FASTQ file: {file_path}, records: {record_count}")
+            return {"format": "fastq", "file": str(file_path), "records": record_count}
+        except Exception as e:
+            logger.error(f"Failed to load FASTQ file {file_path}: {e}")
+            raise
     
     def _load_vcf(self, file_path: Union[str, Path]) -> Dict[str, Any]:
-        """加载 VCF 文件（简化版）"""
-        return {"format": "vcf", "file": str(file_path)}
+        """加载 VCF 文件，返回变异数等信息"""
+        try:
+            variant_count = 0
+            header_lines = 0
+            with open(file_path, 'r') as f:
+                for line in f:
+                    if line.startswith('#'):
+                        header_lines += 1
+                    else:
+                        variant_count += 1
+            logger.info(f"Loaded VCF file: {file_path}, variants: {variant_count}")
+            return {"format": "vcf", "file": str(file_path), "variants": variant_count, "header_lines": header_lines}
+        except Exception as e:
+            logger.error(f"Failed to load VCF file {file_path}: {e}")
+            raise
     
     def _load_fasta(self, file_path: Union[str, Path]) -> Dict[str, Any]:
-        """加载 FASTA 文件（简化版）"""
-        return {"format": "fasta", "file": str(file_path)}
+        """加载 FASTA 文件，返回序列数等信息"""
+        try:
+            sequence_count = 0
+            total_length = 0
+            current_length = 0
+            with open(file_path, 'r') as f:
+                for line in f:
+                    if line.startswith('>'):
+                        sequence_count += 1
+                        if current_length > 0:
+                            total_length += current_length
+                            current_length = 0
+                    else:
+                        current_length += len(line.strip())
+                if current_length > 0:
+                    total_length += current_length
+            logger.info(f"Loaded FASTA file: {file_path}, sequences: {sequence_count}, total_length: {total_length}")
+            return {"format": "fasta", "file": str(file_path), "sequences": sequence_count, "total_length": total_length}
+        except Exception as e:
+            logger.error(f"Failed to load FASTA file {file_path}: {e}")
+            raise
     
     def auto_detect_format(self, file_path: Union[str, Path]) -> str:
         """自动检测文件格式"""
