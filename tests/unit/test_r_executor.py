@@ -1,12 +1,16 @@
-import pytest
-import tempfile
 import os
 import subprocess
+import tempfile
+
+import pytest
+
+from src.analysis.r_executor import RExecutor, RExecutorError
+
 
 def is_r_available():
     """检查R是否可用"""
     try:
-        result = subprocess.run(["Rscript", "--version"], capture_output=True, timeout=5)
+        result = subprocess.run(["Rscript", "--version"], capture_output=True, timeout=5, check=False)
         return result.returncode == 0
     except (FileNotFoundError, subprocess.TimeoutExpired):
         return False
@@ -33,7 +37,6 @@ def test_execute_r_script():
 @pytest.mark.skipif(not is_r_available(), reason="R not installed")
 def test_execute_r_code():
     """Test executing R code directly"""
-    from src.analysis.r_executor import RExecutor
     executor = RExecutor()
     result = executor.execute_code("print(1 + 1)")
     
@@ -42,7 +45,6 @@ def test_execute_r_code():
 
 def test_r_executor_initialization():
     """Test R executor initialization"""
-    from src.analysis.r_executor import RExecutor
     executor = RExecutor()
     
     assert executor.rscript_path is not None
@@ -50,8 +52,8 @@ def test_r_executor_initialization():
 
 def test_execute_script_file_not_found():
     """Test executing non-existent R script"""
-    from src.analysis.r_executor import RExecutor
     executor = RExecutor()
     
-    with pytest.raises(FileNotFoundError):
+    # 现在 execute_script 会抛出 RExecutorError 而不是 FileNotFoundError
+    with pytest.raises(RExecutorError):
         executor.execute_script("nonexistent_script.R")

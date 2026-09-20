@@ -1,18 +1,32 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-from typing import Dict, Any, Optional
 import logging
+from typing import Any
+
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 
 logger = logging.getLogger(__name__)
 
 class Visualizer:
     """可视化模块，生成图表"""
     
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         self.config = config or {}
-        plt.style.use('seaborn-v0_8')
+        self._set_matplotlib_style()
+    
+    def _set_matplotlib_style(self):
+        """设置 matplotlib 样式，兼容不同版本"""
+        try:
+            # 尝试使用新版样式
+            plt.style.use('seaborn-v0_8')
+        except OSError:
+            try:
+                # 尝试使用旧版样式
+                plt.style.use('seaborn')
+            except OSError:
+                # 如果都找不到，使用默认样式
+                logger.warning("Could not find seaborn styles, using default matplotlib style")
     
     def plot_volcano(self, data: pd.DataFrame, 
                     log2fc_col: str = 'log2FC', 
@@ -45,7 +59,7 @@ class Visualizer:
         ax.set_title(title)
         return fig
     
-    def plot_pathway(self, pathway_data: Dict[str, Any]) -> plt.Figure:
+    def plot_pathway(self, pathway_data: dict[str, Any]) -> plt.Figure:
         """绘制通路图（简化版）"""
         # 实际需要更复杂的通路可视化
         fig, ax = plt.subplots(figsize=(10, 6))
