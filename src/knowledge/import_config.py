@@ -1,13 +1,13 @@
 """知识库导入配置"""
 from dataclasses import dataclass
-from typing import List
 from pathlib import Path
+
 
 @dataclass
 class ImportConfig:
     """导入配置"""
     import_dir: str = "data/import"
-    supported_types: List[str] = None
+    supported_types: list[str] = None
     default_sql_query: str = """
         SELECT * FROM articles 
         WHERE human_review = 'Y' 

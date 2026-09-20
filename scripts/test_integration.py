@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """集成测试脚本 - 验证两个项目间的集成"""
+import json
 import os
 import sys
-import json
 import tempfile
 from pathlib import Path
 
