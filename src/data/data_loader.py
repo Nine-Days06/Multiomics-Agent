@@ -40,7 +40,7 @@ class DataLoader:
         """加载 FASTQ 文件，返回记录数等信息"""
         try:
             record_count = 0
-            with open(file_path, 'r') as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     if line.startswith('@'):
                         record_count += 1
@@ -55,7 +55,7 @@ class DataLoader:
         try:
             variant_count = 0
             header_lines = 0
-            with open(file_path, 'r') as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     if line.startswith('#'):
                         header_lines += 1
@@ -73,7 +73,7 @@ class DataLoader:
             sequence_count = 0
             total_length = 0
             current_length = 0
-            with open(file_path, 'r') as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     if line.startswith('>'):
                         sequence_count += 1
