@@ -61,7 +61,6 @@ multiomics-agent/
 │   └── data/               # 数据层（Fetcher/Registry/Storage/Loader）
 ├── r_scripts/              # R 分析脚本
 ├── pubmed-etl/             # 独立文献处理工具（两个项目之一）
-├── scripts/                # 安装与构建脚本
 ├── tests/                  # 测试
 │   ├── unit/
 │   ├── integration/
