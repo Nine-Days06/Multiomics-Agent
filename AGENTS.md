@@ -30,7 +30,7 @@
 | 知识检索 | LightRAG (GraphRAG) |
 | 分析层 | R via 子进程 (rpy2) |
 | 知识库 | LightRAG 本地存储 |
-| 外部 API | PubMed, KEGG (可选) |
+| 外部 API | PubMed, KEGG, UniProt (可选) |
 
 ## 开发环境
 
@@ -51,12 +51,14 @@ streamlit run src/ui/app.py
 ## 目录结构
 
 ```
+multiomics-agent/
 ├── src/                    # Python 源码
+│   ├── main.py             # 入口
 │   ├── ui/                 # Streamlit 界面
-│   ├── control/            # 控制层（意图解析、流程管理）
+│   ├── control/            # 控制层（意图解析、流程管理、R脚本生成）
 │   ├── knowledge/          # 知识检索（LightRAG）
 │   ├── analysis/           # R 分析执行器
-│   └── data/               # 数据加载与缓存
+│   └── data/               # 数据层（Fetcher/Registry/Storage/Loader）
 ├── r_scripts/              # R 分析脚本
 ├── pubmed-etl/             # 独立文献处理工具（两个项目之一）
 ├── scripts/                # 安装与构建脚本
@@ -116,8 +118,9 @@ chore: 构建/工具变更
 3. **外部 API**：默认关闭，用户手动启用
 4. **配置**：敏感信息放 `.env`，不要提交到 git
 5. **缓存**：分析结果和 LLM 响应需要缓存，避免重复计算
+6. **LLM 供应商切换**：通过 `AGENT_LLM_PROVIDER` / `ETL_LLM_PROVIDER` 环境变量切换
 
 ## 相关文档
 
 - 设计文档：`docs/superpowers/specs/`
-- 实现计划：`docs/superpowers/plans/`
+- 实现计划：`docs/superpowers/plans/`（文件名标记完成状态）
