@@ -119,8 +119,3 @@ chore: 构建/工具变更
 4. **配置**：敏感信息放 `.env`，不要提交到 git
 5. **缓存**：分析结果和 LLM 响应需要缓存，避免重复计算
 6. **LLM 供应商切换**：通过 `AGENT_LLM_PROVIDER` / `ETL_LLM_PROVIDER` 环境变量切换
-
-## 相关文档
-
-- 设计文档：`docs/superpowers/specs/`
-- 实现计划：`docs/superpowers/plans/`（文件名标记完成状态）
