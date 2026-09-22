@@ -118,3 +118,47 @@ chore: 构建/工具变更
 4. **配置**：敏感信息放 `.env`，不要提交到 git
 5. **缓存**：分析结果和 LLM 响应需要缓存，避免重复计算
 6. **LLM 供应商切换**：通过 `AGENT_LLM_PROVIDER` / `ETL_LLM_PROVIDER` 环境变量切换
+
+## 代码地图（AI 检索必读）
+
+> 目的：让 AI 快速定位代码，避免全仓扫描。**检索时优先查此表，再按需读文件。**
+
+### 入口清单
+
+| 入口 | 路径 | 说明 |
+|---|---|---|
+| Streamlit Web | `src/ui/app.py` (`create_app`) | `streamlit run src/ui/app.py` |
+| CLI / 主类 | `src/main.py` (`MultiomicsAgent`) | `python -m src.main` |
+| 意图解析 | `src/control/intent_parser.py` (`IntentParser.parse`) | LLM + 关键词回退 |
+| 流程调度 | `src/control/workflow_manager.py` (`execute_workflow`) | 四分支：analysis / knowledge_query / fetch_data / general |
+| R 脚本生成 | `src/control/r_script_generator.py` (`generate_code`) | **动态生成，主逻辑在此** |
+| R 执行 | `src/analysis/r_executor.py` (`execute_code/execute_script`) | subprocess 调 Rscript |
+| 知识库客户端 | `src/knowledge/lightrag_client.py` (`LightRAGClient`) | LightRAG 封装 |
+| 知识导入 CLI | `src/knowledge/import_cli.py` | `python -m src.knowledge.import_cli --dir ...` |
+| 文献一键同步 | `sync_pubmed.py` | pubmed-etl 导出 → 主项目导入 |
+| 文献 ETL | `pubmed-etl/main.py` | 独立子项目，`--step` 分阶段 |
+| 数据 Fetcher | `src/data/fetchers/` + `src/data/registry.py` | GEO / KEGG / UniProt |
+
+### 主调用链
+
+```
+app.py / main.py
+  → MultiomicsAgent.execute_workflow
+    → WorkflowManager.execute_workflow
+      → IntentParser.parse + extract_parameters
+      → 四分支:
+          _execute_analysis_workflow   → RScriptGenerator.generate_code → RExecutor.execute_code
+          _execute_knowledge_workflow  → LightRAGClient.query
+          _execute_fetch_data_workflow → FetcherRegistry.get().search → (用户确认后) confirm_and_download
+          _execute_general_workflow    → 占位响应
+```
+
+> 符号级查找请用 LSP（`lsp_goto_definition`/`lsp_find_references`）或 `ast-grep (sg)`，配合 `.sgconfig.yml` 规则；**不在文档中维护符号表**。
+
+### 检索排除清单（跳过，勿扫描）
+
+- `docs/` — **被 .gitignore 忽略，但检索时必须读**（本地设计文档、接口规范）
+- `.omo/` `.codegraph/` `.worktrees/` `.ruff_cache/` `.pytest_cache/` `__pycache__/` — 工具缓存
+- `knowledge_base/` `data/cache/` `pubmed-etl/data/` — 运行时数据
+- `*.log` `.env` — 日志与密钥
+- `r_scripts/*.R` — **独立副本，仅供手动执行**；主分析逻辑在 `src/control/r_script_generator.py`（见各 .R 文件头注释）
