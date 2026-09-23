@@ -1,4 +1,4 @@
-# 人类多组学分析智能体 - 开发规范
+# CellSpatio 单细胞与时空组学分析智能体 - 开发规范
 
 ## 必须遵循的要求
 
@@ -16,11 +16,11 @@
 
 ## 项目概述
 
-构建交互式人类多组学分析智能体，引导实验生物学家进行数据分析，并基于知识库回答专业问题。
+构建交互式人类单细胞与时空组学分析智能体，引导实验生物学家进行数据分析，并基于知识库回答专业问题。
 
 **两个项目：**
-- `multiomics-agent/` - 人类多组学分析智能体（主项目）
-- `pubmed-etl/` - 独立文献处理工具（支持人类多组学相关文献筛选）
+- `cellspatio-agent/` - CellSpatio 单细胞与时空组学分析智能体（主项目）
+- `pubmed-etl/` - 独立文献处理工具（支持人类单细胞与空间组学相关文献筛选）
 
 ## 技术栈
 
@@ -29,7 +29,7 @@
 | UI | Python + Streamlit |
 | 控制层 | Python |
 | 知识检索 | LightRAG (GraphRAG) |
-| 分析层 | R via 子进程 (rpy2) |
+| 分析层 | R via 子进程 (subprocess Rscript) |
 | 知识库 | LightRAG 本地存储 |
 | 外部 API | PubMed, KEGG, UniProt (可选) |
 
@@ -52,7 +52,7 @@ streamlit run src/ui/app.py
 ## 目录结构
 
 ```
-multiomics-agent/
+cellspatio-agent/
 ├── src/                    # Python 源码
 │   ├── main.py             # 入口
 │   ├── ui/                 # Streamlit 界面
@@ -61,7 +61,7 @@ multiomics-agent/
 │   ├── analysis/           # R 分析执行器
 │   └── data/               # 数据层（Fetcher/Registry/Storage/Loader）
 ├── r_scripts/              # R 分析脚本
-├── pubmed-etl/             # 独立文献处理工具（两个项目之一）
+├── pubmed-etl/             # 独立文献处理工具（单细胞+时空方向）
 ├── tests/                  # 测试
 │   ├── unit/
 │   ├── integration/
@@ -83,7 +83,7 @@ multiomics-agent/
 
 **R:**
 - 使用 snake_case 命名
-- 通过 rpy2 调用，不直接 subprocess
+- 通过 subprocess 调用 Rscript（迁移 rpy2 需单独立项）
 - 脚本放在 `r_scripts/` 目录
 
 ## 测试规范
@@ -113,7 +113,7 @@ chore: 构建/工具变更
 
 ## 注意事项
 
-1. **R 脚本调用**：通过 rpy2 在 Python 中调用，不要用 subprocess
+1. **R 脚本调用**：通过 subprocess 调用 Rscript（迁移 rpy2 需单独立项）
 2. **知识库**：使用 LightRAG，不要引入其他 GraphRAG 框架
 3. **外部 API**：默认关闭，用户手动启用
 4. **配置**：敏感信息放 `.env`，不要提交到 git
@@ -129,10 +129,10 @@ chore: 构建/工具变更
 | 入口 | 路径 | 说明 |
 |---|---|---|
 | Streamlit Web | `src/ui/app.py` (`create_app`) | `streamlit run src/ui/app.py` |
-| CLI / 主类 | `src/main.py` (`MultiomicsAgent`) | `python -m src.main` |
+| CLI / 主类 | `src/main.py` (`CellSpatioAgent`) | `python -m src.main` |
 | 意图解析 | `src/control/intent_parser.py` (`IntentParser.parse`) | LLM + 关键词回退 |
 | 流程调度 | `src/control/workflow_manager.py` (`execute_workflow`) | 四分支：analysis / knowledge_query / fetch_data / general |
-| R 脚本生成 | `src/control/r_script_generator.py` (`generate_code`) | **动态生成，主逻辑在此** |
+| R 脚本生成 | `src/control/r_script_generator.py` (`generate_code`) | LLM 动态生成优先，模板回退 |
 | R 执行 | `src/analysis/r_executor.py` (`execute_code/execute_script`) | subprocess 调 Rscript |
 | 知识库客户端 | `src/knowledge/lightrag_client.py` (`LightRAGClient`) | LightRAG 封装 |
 | 知识导入 CLI | `src/knowledge/import_cli.py` | `python -m src.knowledge.import_cli --dir ...` |
@@ -144,7 +144,7 @@ chore: 构建/工具变更
 
 ```
 app.py / main.py
-  → MultiomicsAgent.execute_workflow
+  → CellSpatioAgent.execute_workflow
     → WorkflowManager.execute_workflow
       → IntentParser.parse + extract_parameters
       → 四分支:
