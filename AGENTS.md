@@ -130,8 +130,8 @@ chore: 构建/工具变更
 |---|---|---|
 | Streamlit Web | `src/ui/app.py` (`create_app`) | `streamlit run src/ui/app.py` |
 | CLI / 主类 | `src/main.py` (`CellSpatioAgent`) | `python -m src.main` |
-| 意图解析 | `src/control/intent_parser.py` (`IntentParser.parse`) | LLM + 关键词回退 |
-| 流程调度 | `src/control/workflow_manager.py` (`execute_workflow`) | 四分支：analysis / knowledge_query / fetch_data / general |
+| 工具路由运行时 | `src/control/agent_runtime.py` (`AgentRuntime.execute`) | 主入口；失败回退 `IntentParser` |
+| 工具 Schema | `src/control/tools.py` (`TOOL_SCHEMAS`) | run_analysis / search_datasets / query_knowledge |
 | R 脚本生成 | `src/control/r_script_generator.py` (`generate_code`) | LLM 动态生成优先，模板回退 |
 | R 执行 | `src/analysis/r_executor.py` (`execute_code/execute_script`) | subprocess 调 Rscript |
 | 知识库客户端 | `src/knowledge/lightrag_client.py` (`LightRAGClient`) | LightRAG 封装 |
@@ -145,13 +145,10 @@ chore: 构建/工具变更
 ```
 app.py / main.py
   → CellSpatioAgent.execute_workflow
-    → WorkflowManager.execute_workflow
-      → IntentParser.parse + extract_parameters
-      → 四分支:
-          _execute_analysis_workflow   → RScriptGenerator.generate_code → RExecutor.execute_code
-          _execute_knowledge_workflow  → LightRAGClient.query
-          _execute_fetch_data_workflow → FetcherRegistry.get().search → (用户确认后) confirm_and_download
-          _execute_general_workflow    → 占位响应
+    → AgentRuntime.execute（tool-calling；无 LLM/异常回退旧路径）
+        → WorkflowManager.run_analysis_for_agent / search_datasets_for_agent / query_knowledge_for_agent
+        → 终态（success / needs_* / error）直接返回 UI
+        → 无工具调用 → general_response
 ```
 
 > 符号级查找请用 LSP（`lsp_goto_definition`/`lsp_find_references`）或 `ast-grep (sg)`，配合 `.sgconfig.yml` 规则；**不在文档中维护符号表**。
