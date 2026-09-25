@@ -132,6 +132,11 @@ chore: 构建/工具变更
 | CLI / 主类 | `src/main.py` (`CellSpatioAgent`) | `python -m src.main` |
 | 工具路由运行时 | `src/control/agent_runtime.py` (`AgentRuntime.execute`) | 主入口；失败回退 `IntentParser` |
 | 工具 Schema | `src/control/tools.py` (`TOOL_SCHEMAS`) | run_analysis / search_datasets / query_knowledge |
+| Workflow 记录器 | `src/control/workflow_recorder.py` (`WorkflowRecorder`) | 记录 intent/params/steps/outputs |
+| WRROC 存储 | `src/control/wrroc_store.py` (`WRROCStore`) | `.wrroc/<run_id>/workflow.json` 落盘 |
+| 快照管理 | `src/control/snapshot_manager.py` (`SnapshotManager`) | Git worktree `snapshots/<run_id>/` |
+| 复现接口 | `src/control/replay.py` (`replay_run`) | 一键恢复 worktree+数据+环境 |
+| 复现 CLI | `src/cli/replay.py` | `python -m src.cli.replay <run_id>` |
 | R 脚本生成 | `src/control/r_script_generator.py` (`generate_code`) | LLM 动态生成优先，模板回退 |
 | R 执行 | `src/analysis/r_executor.py` (`execute_code/execute_script`) | subprocess 调 Rscript |
 | 知识库客户端 | `src/knowledge/lightrag_client.py` (`LightRAGClient`) | LightRAG 封装 |
@@ -147,8 +152,16 @@ app.py / main.py
   → CellSpatioAgent.execute_workflow
     → AgentRuntime.execute（tool-calling；无 LLM/异常回退旧路径）
         → WorkflowManager.run_analysis_for_agent / search_datasets_for_agent / query_knowledge_for_agent
+        → WorkflowRecorder 记录 intent/params/steps/outputs
+        → WRROCStore.persist() → `.wrroc/<run_id>/workflow.json`
+        → SnapshotManager.create_snapshot() → `snapshots/<run_id>/` worktree
         → 终态（success / needs_* / error）直接返回 UI
         → 无工具调用 → general_response
+
+# 复现链路
+python -m src.cli.replay <run_id>
+  → replay_run() 恢复 worktree + 数据 + 环境
+  → 返回 snapshot_path + status
 ```
 
 > 符号级查找请用 LSP（`lsp_goto_definition`/`lsp_find_references`）或 `ast-grep (sg)`，配合 `.sgconfig.yml` 规则；**不在文档中维护符号表**。
