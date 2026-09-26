@@ -61,7 +61,6 @@ cellspatio-agent/
 │   ├── knowledge/          # 知识检索（LightRAG）
 │   ├── analysis/           # R 分析执行器
 │   └── data/               # 数据层（Fetcher/Registry/Storage/Loader）
-├── r_scripts/              # R 分析脚本
 ├── pubmed-etl/             # 独立文献处理工具（单细胞+时空方向）
 ├── tests/                  # 测试
 │   ├── unit/
@@ -187,4 +186,4 @@ WorkflowRecorder.finish_run()
 - `.omo/` `.codegraph/` `.worktrees/` `.ruff_cache/` `.pytest_cache/` `__pycache__/` — 工具缓存
 - `knowledge_base/` `data/cache/` `pubmed-etl/data/` — 运行时数据
 - `*.log` `.env` — 日志与密钥
-- `r_scripts/*.R` — **独立副本，仅供手动执行**；主分析逻辑在 `src/control/r_script_generator.py`（见各 .R 文件头注释）
+- R 分析逻辑统一由 `src/control/r_script_generator.py` 生成（原 `r_scripts/` 已移除）
