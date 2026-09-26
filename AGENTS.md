@@ -56,7 +56,8 @@ cellspatio-agent/
 ├── src/                    # Python 源码
 │   ├── main.py             # 入口
 │   ├── ui/                 # Streamlit 界面
-│   ├── control/            # 控制层（意图解析、流程管理、R脚本生成）
+│   ├── control/            # 控制层（意图解析、流程管理、R脚本生成、KG Memory、Skill 路由）
+│   ├── skills/             # 技能平台（Manifest/Base/Registry/Loader）
 │   ├── knowledge/          # 知识检索（LightRAG）
 │   ├── analysis/           # R 分析执行器
 │   └── data/               # 数据层（Fetcher/Registry/Storage/Loader）
@@ -144,6 +145,14 @@ chore: 构建/工具变更
 | 文献一键同步 | `sync_pubmed.py` | pubmed-etl 导出 → 主项目导入 |
 | 文献 ETL | `pubmed-etl/main.py` | 独立子项目，`--step` 分阶段 |
 | 数据 Fetcher | `src/data/fetchers/` + `src/data/registry.py` | GEO / KEGG / UniProt |
+| **KG Memory** | `src/control/kg_memory.py` (`KGMemory`) | WorkflowRecorder → LightRAG 增量写入 |
+| **KG Query** | `src/control/kg_query.py` (`KGQuery`) | 自然语言查询封装 |
+| **技能基类** | `src/skills/base.py` (`SkillBase`) | 技能接口 + 自动记忆 + 最佳实践查询 |
+| **技能加载器** | `src/skills/loader.py` (`SkillLoader`) | 动态加载 + 热重载（源码 compile/exec） |
+| **技能注册表** | `src/skills/registry.py` (`SkillRegistry`) | 技能清单、版本、依赖解析 |
+| **技能清单** | `src/skills/manifest.py` (`SkillManifest`) | 元数据、依赖、IO Schema |
+| **模态路由** | `src/control/router.py` (`ModalRouter`) | 任务分类 → Skill 分发 → 回退链 + KG 注入 |
+| **任务分类器** | `src/control/classifier.py` (`TaskClassifier`) | 关键词/规则分类 → modality + skill |
 
 ### 主调用链
 
@@ -162,6 +171,12 @@ app.py / main.py
 python -m src.cli.replay <run_id>
   → replay_run() 恢复 worktree + 数据 + 环境
   → 返回 snapshot_path + status
+
+# P3c/P3d 记忆闭环
+WorkflowRecorder.finish_run()
+  → KGMemory.ingest(execution) → LightRAG 知识图谱增量写入
+  → SkillBase.teardown() → 自动记忆技能执行经验
+  → SkillBase.query_best_practices() → 检索最佳实践注入 SkillContext
 ```
 
 > 符号级查找请用 LSP（`lsp_goto_definition`/`lsp_find_references`）或 `ast-grep (sg)`，配合 `.sgconfig.yml` 规则；**不在文档中维护符号表**。
