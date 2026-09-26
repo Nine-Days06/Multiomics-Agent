@@ -39,11 +39,8 @@
 **R:** 4.0+
 
 ```bash
-# 安装 Python 依赖
+# 安装 Python 依赖（开发/测试工具：pip install -e .[dev]）
 pip install -r requirements.txt
-
-# 安装 R 依赖
-R -e "renv::restore()"
 
 # 启动应用
 streamlit run src/ui/app.py
@@ -84,7 +81,7 @@ cellspatio-agent/
 **R:**
 - 使用 snake_case 命名
 - 通过 subprocess 调用 Rscript（迁移 rpy2 需单独立项）
-- 脚本放在 `r_scripts/` 目录
+- 分析脚本由 `src/control/r_script_generator.py` 动态生成，无固定脚本目录
 
 ## 测试规范
 
